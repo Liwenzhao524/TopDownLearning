@@ -6,6 +6,7 @@ public class PlayerMovement : MonoBehaviour
     PlayerControl _ctrl;
     CharacterController _characterController => GetComponent<CharacterController>();
     Animator _animator => GetComponentInChildren<Animator>();
+    Player _player => GetComponent<Player>();
 
     [Header("Movement Info")]
     [SerializeField] float _walkSpeed;
@@ -24,21 +25,11 @@ public class PlayerMovement : MonoBehaviour
     Vector2 _moveInput;
     Vector2 _aimInput;
 
-    private void Awake()
-    {
-        AssignInputEvents();
-    }
-
 
     private void Start()
     {
         _currentSpeed = _walkSpeed;
-    }
-
-    private void Shoot()
-    {
-        Debug.Log("Shoot");
-        _animator.SetTrigger("Fire");
+        AssignInputEvents();
     }
 
     private void Update()
@@ -71,7 +62,7 @@ public class PlayerMovement : MonoBehaviour
             _lookDirection.Normalize();
 
             transform.forward = _lookDirection;
-            _aimPoint.position = new Vector3(hitInfo.point.x, transform.position.y, hitInfo.point.z);
+            _aimPoint.position = new Vector3(hitInfo.point.x, transform.position.y + 1, hitInfo.point.z);
         }
     }
 
@@ -98,13 +89,9 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    #region Input System
-
     private void AssignInputEvents()
     {
-        _ctrl = new();
-
-        _ctrl.Character.Fire.performed += context => Shoot();
+        _ctrl = _player.ctrl;
 
         _ctrl.Character.Movement.performed += context =>
         {
@@ -133,16 +120,5 @@ public class PlayerMovement : MonoBehaviour
         _ctrl.Character.Aim.performed += context => _aimInput = context.ReadValue<Vector2>();
         _ctrl.Character.Aim.canceled += context => _aimInput = Vector2.zero;
     }
-
-    private void OnEnable()
-    {
-        _ctrl.Enable();
-    }
-    private void OnDisable()
-    {
-        _ctrl.Disable();
-    }
-
-    #endregion
 
 }
