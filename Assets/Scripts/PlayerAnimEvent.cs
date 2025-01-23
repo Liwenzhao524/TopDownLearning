@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerAnimEvent : MonoBehaviour
 {
-    WeaponVisualController _visualctrl => GetComponentInParent<WeaponVisualController>();
+    PlayerWeaponVisual _visual => GetComponentInParent<PlayerWeaponVisual>();
 
     // Start is called before the first frame update
     void Start()
@@ -14,19 +14,19 @@ public class PlayerAnimEvent : MonoBehaviour
 
     public void ReloadFinish()
     {
-        _visualctrl.RecoverRigWeight();
+        _visual.RecoverRigWeight();
 
 
     }
 
     public void WeaponGrabFinish()
     {
-        _visualctrl.SetBusyWhenGrab(false);
+        _visual.SetBusyWhenGrab(false);
     }
 
     public void RecoverWeight()
     {
-        _visualctrl.RecoverRigWeight();
-        _visualctrl.RecoverIKWeight();
+        _visual.RecoverRigWeight();
+        _visual.RecoverIKWeight();
     }
 }

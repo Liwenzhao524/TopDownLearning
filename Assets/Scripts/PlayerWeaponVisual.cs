@@ -5,7 +5,7 @@ using UnityEngine.Animations.Rigging;
 
 public enum GrabType { BackGrab, SideGrab};
 
-public class WeaponVisualController : MonoBehaviour
+public class PlayerWeaponVisual : MonoBehaviour
 {
     [SerializeField] Transform[] _weapons;
 
