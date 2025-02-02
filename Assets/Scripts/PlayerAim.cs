@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.PackageManager;
@@ -12,6 +13,11 @@ public class PlayerAim : MonoBehaviour
     [Header("Aim Info")]
     [SerializeField] Transform _aimPoint;
     [SerializeField] LayerMask _aimLayer;
+    [SerializeField] bool _isAimPrecislyEnable = true;
+    [SerializeField] bool _isAimLockEnable = true;
+
+    [Header("Aim Line - Laser")]
+    [SerializeField] LineRenderer _aimLine;
 
     [Header("Camera Info")]
     [SerializeField] Transform _cameraPoint;
@@ -21,7 +27,8 @@ public class PlayerAim : MonoBehaviour
     [SerializeField] float _maxCameraDis;
     [Range(4, 8)]
     [SerializeField] float _cameraSensetivity;
-    Vector2 _aimInput;
+
+    Vector2 _mousePos;
     RaycastHit _lastHitInfo;
 
     // Start is called before the first frame update
@@ -30,9 +37,9 @@ public class PlayerAim : MonoBehaviour
         AssignInputEvents();
     }
 
-    public RaycastHit GetMouseHit()
+    public RaycastHit GetMouseHitInfo()
     {
-        Ray ray = Camera.main.ScreenPointToRay(_aimInput);
+        Ray ray = Camera.main.ScreenPointToRay(_mousePos);
 
         if ( Physics.Raycast(ray, out var hitInfo, Mathf.Infinity, _aimLayer) )
         {
@@ -47,26 +54,69 @@ public class PlayerAim : MonoBehaviour
     {
         _ctrl = _player.ctrl;
 
-        _ctrl.Character.Aim.performed += context => _aimInput = context.ReadValue<Vector2>();
-        _ctrl.Character.Aim.canceled += context => _aimInput = Vector2.zero;
+        _ctrl.Character.Aim.performed += context => _mousePos = context.ReadValue<Vector2>();
+        _ctrl.Character.Aim.canceled += context => _mousePos = Vector2.zero;
     }
 
     // Update is called once per frame
     void Update()
     {
-        _aimPoint.position = GetMouseHit().point + Vector3.up;
-        _cameraPoint.position = Vector3.Lerp(_cameraPoint.position, GetCameraCenter(), _cameraSensetivity * Time.deltaTime);
+        SetAimPosition();
+        SetAimLine();
+        SetCameraPosition();
     }
+
+    private void SetAimLine()
+    {
+        float range = 5;
+
+        Vector3 startPos = _player.weapon.GetMuzzleTransform().position;
+        Vector3 endPos = startPos + _player.weapon.GetBulletDirection() * range;
+
+        if( Physics.Raycast(startPos, _player.weapon.GetBulletDirection(), out RaycastHit hit, range) )
+            endPos = hit.point;
+
+        _aimLine.SetPosition(0, startPos);
+        _aimLine.SetPosition(1, 0.2f * startPos + 0.8f * endPos);
+        _aimLine.SetPosition(2, endPos);
+    }
+
+    private void SetAimPosition()
+    {
+        Transform target = GetLockTargetTransform();
+        if( target != null && _isAimLockEnable) 
+        {
+            _aimPoint.position = target.position;
+            return;
+        }
+
+        _aimPoint.position = GetMouseHitInfo().point;
+        _aimPoint.position += _isAimPrecislyEnable ? Vector3.up : Vector3.zero;
+    }
+    private void SetCameraPosition() =>  _cameraPoint.position = Vector3.Lerp(_cameraPoint.position, GetCameraCenter(), _cameraSensetivity * Time.deltaTime);
 
     private Vector3 GetCameraCenter()
     {
         float maxCameraDis = _player.movement.moveInput.y < -0.5f ? _minCameraDis : _maxCameraDis;
 
-        Vector3 aimDirection = (GetMouseHit().point - transform.position).normalized;
-        float distance = Vector3.Distance(GetMouseHit().point, transform.position);
+        Vector3 aimDirection = (GetMouseHitInfo().point - transform.position).normalized;
+        float distance = Vector3.Distance(GetMouseHitInfo().point, transform.position);
         distance = Mathf.Clamp(distance, _minCameraDis, maxCameraDis);
         aimDirection *= distance;
         Vector3 target = transform.position + aimDirection + Vector3.up;
         return target;
     }
+
+    public Transform GetLockTargetTransform()
+    {
+        Transform target = null;
+        if ( GetMouseHitInfo().transform.GetComponent<LockTarget>() != null )
+            target = GetMouseHitInfo().transform;
+
+        return target;
+    }
+
+    public bool CanAimPrecisly() => _isAimPrecislyEnable;
+    public Transform GetAimPoint() => _aimPoint;
+
 }

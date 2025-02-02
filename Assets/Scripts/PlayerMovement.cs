@@ -46,7 +46,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void ApplyRotation()
     {
-        Vector3 lookDirection = _player.aim.GetMouseHit().point - transform.position;
+        Vector3 lookDirection = _player.aim.GetMouseHitInfo().point - transform.position;
         lookDirection.y = 0;
         lookDirection.Normalize();
 
