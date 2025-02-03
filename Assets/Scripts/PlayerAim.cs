@@ -86,7 +86,7 @@ public class PlayerAim : MonoBehaviour
         Transform target = GetLockTargetTransform();
         if( target != null && _isAimLockEnable) 
         {
-            _aimPoint.position = target.position;
+            _aimPoint.position = target.GetComponent<Renderer>() != null ? target.GetComponent<Renderer>().bounds.center : target.position;
             return;
         }
 

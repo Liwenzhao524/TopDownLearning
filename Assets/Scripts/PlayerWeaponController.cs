@@ -9,6 +9,7 @@ public class PlayerWeaponController : MonoBehaviour
 
     Animator _animator => GetComponentInChildren<Animator>();
 
+
     [SerializeField] GameObject _bulletPrefab;
     [SerializeField] float _bulletSpeed;
     [SerializeField] Transform _muzzle;
@@ -24,7 +25,8 @@ public class PlayerWeaponController : MonoBehaviour
     void Shoot()
     {
         GameObject newBullet = Instantiate(_bulletPrefab, _muzzle.position, Quaternion.LookRotation(_muzzle.forward));
-        newBullet.GetComponent<Rigidbody>().velocity = GetBulletDirection() * _bulletSpeed;
+        newBullet.GetComponent<Bullet>().SetupBullet(GetBulletDirection() * _bulletSpeed);
+        //newBullet.GetComponent<Rigidbody>().velocity = GetBulletDirection() * _bulletSpeed;
         Destroy(newBullet, 5);
 
         _animator.SetTrigger("Fire");
@@ -32,13 +34,15 @@ public class PlayerWeaponController : MonoBehaviour
 
     public Vector3 GetBulletDirection()
     {
-        Vector3 dir = (_aimPoint.position - _muzzle.position).normalized;
+        Vector3 dir = _aimPoint.position - _muzzle.position;
         
         _weaponHolder.LookAt(_aimPoint);
         _muzzle.LookAt(_aimPoint);
         
         if(!_player.aim.CanAimPrecisly() && _player.aim.GetLockTargetTransform() == null)
             dir.y = 0; 
+        dir = dir.normalized;
+
         return dir;
     }
 
